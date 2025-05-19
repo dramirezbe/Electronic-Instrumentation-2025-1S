@@ -1,0 +1,52 @@
+# --- Archivos de compilación de ESP-IDF ---
+# Directorios de build
+**/build/
+**/out/
+**/CMakeCache.txt
+**/CMakeFiles/
+**/Makefile
+**/install/
+**/compile_commands.json
+
+# Configuraciones de proyecto
+**/sdkconfig
+**/sdkconfig.old
+**/sdkconfig.defaults
+
+# Artefactos de idf.py
+**/.env
+
+# --- VS Code ---
+# Carpeta de ajustes locales / workspaces
+**/.vscode/
+**/.vscode/*
+!.vscode/extensions.json    # (opcional) conservar recomendaciones
+!.vscode/c_cpp_properties.json  # (opcional) conservar paths
+
+# --- Archivos temporales y de sistema ---
+**/*~
+**/*.swp
+**/.DS_Store
+**/Thumbs.db
+
+# --- Python virtual environments (si los usas) ---
+**/venv/
+**/.venv/
+
+# --- Logs ---
+**/*.log
+
+# --- Archivos generados por herramientas de terceros ---
+**/esp-idf/components/**/build/
+**/esp-idf/build/
+
+# --- Opcionales: particiones y blobs ---
+**/partition_table/*.bin
+**/partition_table/*.csv
+**/*.bin
+**/*.elf
+**/*.hex
+
+# --- Ejemplo de patrones extra que podrías necesitar ---
+# Ignorar archivos de salida de compilación de ejemplos o tests
+**/example_*/*/build/
