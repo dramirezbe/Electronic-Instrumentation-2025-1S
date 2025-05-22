@@ -16,7 +16,7 @@
 
 // Configuración del ADC basada en tu hardware
 #define ADC_CHANNEL      ADC1_CHANNEL_7   // Ejemplo: GPIO35 en muchos ESP32
-#define ADC_ATTENUATION  ADC_ATTEN_DB_11  // 11 dB de atenuación, máx ~3.9V
+#define ADC_ATTENUATION  ADC_ATTEN_DB_11  // 11 dB de atenuación.
 #define ADC_WIDTH        ADC_WIDTH_BIT_12 // Resolución de 12 bits (0-4095)
 #define DEFAULT_VREF     3300             // Vref por defecto en mV (calibrar si es posible)
 
@@ -54,7 +54,7 @@ void app_main(void) {
         uint32_t voltage = esp_adc_cal_raw_to_voltage(raw_reading, &adc_chars);
 
         // Imprimir valores en UART (Serial Plotter de Arduino)
-        printf("%d\n", raw_reading);
+        printf("%lu\n", voltage);
 
         // Esperar 100ms entre lecturas
         vTaskDelay(pdMS_TO_TICKS(100));
