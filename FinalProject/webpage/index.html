@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ionic Thruster Control Interface</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Thruster Diagnostics & Control</h1>
+            <div class="status-indicator online">System Online</div>
+        </header>
+
+        <main class="main-content">
+            <section class="sensor-data panel">
+                <h2>Environmental Readings</h2>
+                <div class="data-grid">
+                    <div class="data-item">
+                        <span class="label">Temperature:</span>
+                        <span class="value" id="temperature">25.3 &deg;C</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="label">Humidity:</span>
+                        <span class="value" id="humidity">60.1 %</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="thruster-data panel">
+                <h2>Ionic Thruster Metrics</h2>
+                <div class="data-grid">
+                    <div class="data-item">
+                        <span class="label">Air Pressure:</span>
+                        <span class="value" id="air-pressure">1250 km/h</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="thruster-control panel">
+                <h2>Thruster Power Control</h2>
+                <div class="control-area">
+                    <div class="pwm-display">
+                        <span class="label">PWM Duty Cycle:</span>
+                        <span class="value" id="pwm-percentage">50%</span>
+                    </div>
+                    <div class="pwm-bar-container">
+                        <input type="range" min="0" max="100" value="50" class="pwm-slider" id="pwmSlider">
+                        <div class="pwm-bar" id="pwmBar" style="width: 50%;"></div>
+                    </div>
+                    <p class="note">Adjust the slider to control thruster power.</p>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 Electronic Instrumentation</p>
+            <p>David Ramírez Betancourth & Santiago Bustamante Montoya</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
