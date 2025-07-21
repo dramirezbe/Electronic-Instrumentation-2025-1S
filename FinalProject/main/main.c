@@ -38,7 +38,7 @@
 
 //-------------------PWM----------------------
 #define PWM_FREQ_HZ 1000
-#define PWM_PIN = GPIO_NUM_27
+#define PWM_PIN GPIO_NUM_27
 
 //-----------------------------------------Struct----------------------------------------
 
@@ -53,6 +53,11 @@ typedef struct {
 static QueueHandle_t adc_data_queue;
 static QueueHandle_t uart_rx_queue;
 
+QueueHandle_t http_send_lm35_queue;
+QueueHandle_t http_receive_pwm_queue;
+QueueHandle_t http_send_anemo_queue;
+
+
 // Mutex for shared ADC resource
 SemaphoreHandle_t xMutex;
 
@@ -62,6 +67,8 @@ static uint8_t uart_rx_buffer[RD_BUF_SIZE];
 
 // LEDC Timer and Channels configuration
 pwm_timer_config_t timer = {.frequency_hz = PWM_FREQ_HZ, .resolution_bit = LEDC_TIMER_10_BIT, .timer_num = LEDC_TIMER_0};
+
+pwm_channel_t thruster_pwm = {.channel = LEDC_CHANNEL_0, .gpio_num = PWM_PIN, .duty_percent = 0};
 
 // ADC Configurations and Handles
 adc_config_t ntc_adc_conf = {
@@ -256,7 +263,12 @@ void adc_task(void *arg) {
             }
             current_lm35 = new_lm35;
             current_ntc = new_ntc;
+
             diff = fabs(current_ntc - current_lm35);
+
+            xQueueOverwrite(http_send_lm35_queue, &current_lm35);
+            xQueueOverwrite(http_send_anemo_queue, &diff);
+
             sprintf(wind, "%.2f Km/h", diff);
             sprintf(ambient, "%.2f °C", current_lm35);
             
@@ -268,6 +280,9 @@ void adc_task(void *arg) {
                 ssd1306_print_str(18,30,"Ambient Temp:", false);
                 ssd1306_print_str(28,45,ambient, false);
                 ssd1306_display();
+
+                
+
                 last_display_time = xTaskGetTickCount();
             }
 
@@ -279,10 +294,23 @@ void adc_task(void *arg) {
 
 }
 
+void pwm_task(void *arg) {
+
+    int current_pwm = 0;
+    int new_pwm = 0;
+
+    while(1) {
+        if(xQueueReceive(http_receive_pwm_queue, &new_pwm, portMAX_DELAY)) {
+            current_pwm = new_pwm;
+            pwm_set_duty_percent(&thruster_pwm, current_pwm);
+        }
+        
+    }
+}
+
 
 void app_main(void)
 {
-
     //MUTEX
     xMutex = xSemaphoreCreateMutex();
     printf("Mutex created successfully.\r\n");
@@ -291,10 +319,16 @@ void app_main(void)
     pwm_timer_init(&timer);
     printf("Timer Initialized. \r\n");
 
+    pwm_channel_init(&thruster_pwm, &timer);
+    printf("Channel Initialized. \r\n");
+
     //ADC
     adc_data_queue = xQueueCreate(10, sizeof(adc_type_data_t));
+    http_receive_pwm_queue = xQueueCreate(10, sizeof(int));
+    http_send_lm35_queue = xQueueCreate(10, sizeof(float));
+    http_send_anemo_queue = xQueueCreate(10, sizeof(float));
 
-    // Initialize NVS
+    //Initialize NVS
 	// esp_err_t ret = nvs_flash_init();
 	// if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
 	// {
