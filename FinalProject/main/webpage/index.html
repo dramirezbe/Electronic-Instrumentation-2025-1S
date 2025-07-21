@@ -1,60 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <script src='jquery-3.3.1.min.js'></script>
-        <link rel="stylesheet" href="app.css">
-        <script src="app.js"></script> <title>ESP32 JAVASTRAL</title>
-    </head>
-    <body>
-    <header>
-        <h1>ESP32 Javastral</h1>
-    </header>
-    
-    <div id="NTCSensor">
-        <h2>Temperature Reading NTC Sensor</h2>
-        <label for="temperature_reading">Temperature: </label>
-        <div id="temperature_reading"></div> 
-    </div>
-        
-    <div id="WiFiConnect">
-        <h2>ESP32 Interaction</h2>
-        <h3>RGB Handle Color</h3>
-        <section>
-            <input id="red_val" type="number" step="1" placeholder="Red">
-            <input id="green_val" type="number" step="1" placeholder="Green">
-            <input id="blue_val" type="number" step="1" placeholder="Blue">
-        </section>
-        <h3>Handle Temp Threshold</h3>
-        <section class="temp_threshold">
-            <div class="color-group">
-                <h4>Red Thresholds</h4>
-                <input id="red_min" type="number" step="1" placeholder="Min Red">
-                <input id="red_max" type="number" step="1" placeholder="Max Red">
-            </div>
-            <div class="color-group">
-                <h4>Green Thresholds</h4>
-                <input id="green_min" type="number" step="1" placeholder="Min Green">
-                <input id="green_max" type="number" step="1" placeholder="Max Green">
-            </div>
-            <div class="color-group">
-                <h4>Blue Thresholds</h4>
-                <input id="blue_min" type="number" step="1" placeholder="Min Blue">
-                <input id="blue_max" type="number" step="1" placeholder="Max Blue">
-            </div>
-        </section>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ionic Thruster Control Interface</title>
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Thruster Diagnostics & Control</h1>
+            <div class="status-indicator online">System Online</div>
+        </header>
 
-        <div class="buttons">
-            <input id="send_rgb" type="button" value="Send Color" />
-            <input id="send_temp_threshold" type="button" value="Send Temp Threshold"/>
-            <input id="toogle_led" type="button" value="Toggle Board LED" />
-            <input id="apagar_uart" type="button" value="UART On" />
-        </div>
-        <div id="wifi_connect_credentials_errors"></div>
-        <h4 id="wifi_connect_status"></h4>
+        <main class="main-content">
+            <section class="sensor-data panel">
+                <h2>Environmental Readings</h2>
+                <div class="data-grid">
+                    <div class="data-item">
+                        <span class="label">Temperature:</span>
+                        <span class="value" id="temperature">25.3 &deg;C</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="thruster-data panel">
+                <h2>Ionic Thruster Metrics</h2>
+                <div class="data-grid">
+                    <div class="data-item">
+                        <span class="label">Air Pressure:</span>
+                        <span class="value" id="air-pressure">4 km/h</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="thruster-control panel">
+                <h2>Thruster Power Control</h2>
+                <div class="control-area">
+                    <div class="pwm-display">
+                        <span class="label">PWM Duty Cycle:</span>
+                        <span class="value" id="pwm-percentage">50%</span>
+                    </div>
+                    <div class="pwm-bar-container">
+                        <input type="range" min="0" max="100" value="50" class="pwm-slider" id="pwmSlider">
+                        <div class="pwm-bar" id="pwmBar" style="width: 50%;"></div>
+                    </div>
+                    <p class="note">Adjust the slider to control thruster power.</p>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 Electronic Instrumentation</p>
+            <p>David Ramírez Betancourth & Santiago Bustamante Montoya</p>
+        </footer>
     </div>
-        
-    </body>
+
+    <script src="app.js"></script>
+</body>
 </html>
