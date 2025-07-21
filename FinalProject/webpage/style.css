@@ -1,15 +1,16 @@
 /* General Body and Container Styling */
+/* General Body and Container Styling */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(to right bottom, #0a0a0a, #1a1a1a);
-    color: #00ffcc; /* Futuristic light blue/green */
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    overflow: hidden; /* Hide potential scrollbar from animations */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: rgb(27, 33, 44); /* Changed to solid RGB color */
+  color: #00ffcc; /* Futuristic light blue/green */
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden; /* Hide potential scrollbar from animations */
 }
 
 .container {
