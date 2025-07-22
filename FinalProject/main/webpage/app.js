@@ -1,51 +1,95 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const pwmSlider = document.getElementById('pwmSlider');
-    const pwmPercentageDisplay = document.getElementById('pwm-percentage');
-    const pwmBar = document.getElementById('pwmBar');
+/**
+ * @file app.js
+ * @brief Main JavaScript file for the Ionic Thruster Control Interface.
+ *
+ * Handles fetching sensor data from the ESP32 server and sending control
+ * commands back to it.
+ */
 
-    // Function to update the PWM display and bar
-    const updatePWM = (value) => {
-        pwmPercentageDisplay.textContent = `${value}%`;
-        pwmBar.style.width = `${value}%`;
-    };
+$(document).ready(function() {
 
-    // Initialize the PWM display and bar with the slider's initial value
-    // This ensures it matches the HTML's initial 'value' attribute
-    updatePWM(pwmSlider.value);
+    // --- Element Selectors ---
+    const tempValueElement = $('#temperature-value');
+    const airSpeedValueElement = $('#air-speed-value');
+    const pwmSlider = $('#pwm-slider');
+    const pwmPercentageElement = $('#pwm-percentage-value');
+    const pwmBarElement = $('#pwm-bar');
 
-    // Add an event listener to the slider for real-time updates
-    pwmSlider.addEventListener('input', (event) => {
-        updatePWM(event.target.value);
+    /**
+     * @brief Fetches sensor readings from the server and updates the UI.
+     *
+     * This function makes two GET requests to the ESP32:
+     * 1. /lm35Sensor.json for the temperature.
+     * 2. /anemoSensor.json for the wind speed.
+     */
+    function updateSensorReadings() {
+        // Fetch Temperature Data
+        $.getJSON('/lm35Sensor.json', function(data) {
+            if (data && typeof data.temp !== 'undefined') {
+                // Update the temperature value, formatted to one decimal place.
+                tempValueElement.html(data.temp.toFixed(1) + ' °C');
+            }
+        }).fail(function() {
+            console.error("Error: Could not retrieve temperature data.");
+        });
+
+        // Fetch Anemometer (Air Speed) Data
+        $.getJSON('/anemoSensor.json', function(data) {
+            if (data && typeof data.wind !== 'undefined') {
+                // Update the air speed value, formatted to one decimal place.
+                airSpeedValueElement.text(data.wind.toFixed(1) + ' km/h');
+            }
+        }).fail(function() {
+            console.error("Error: Could not retrieve air speed data.");
+        });
+    }
+
+    /**
+     * @brief Sends the new PWM value to the server via a POST request.
+     * @param {number} pwmValue - The PWM value (0-100) to be sent.
+     */
+    function sendPwmValue(pwmValue) {
+        console.log(`Sending PWM value to server: ${pwmValue}`);
+
+        $.ajax({
+            url: '/pwmValues.json',
+            type: 'POST',
+            contentType: 'application/json',
+            // The C code expects a JSON object: {"pwm_val": value}
+            data: JSON.stringify({ pwm_val: pwmValue }),
+            success: function(response) {
+                console.log('Server successfully received PWM value.');
+            },
+            error: function(xhr, status, error) {
+                console.error('Error sending PWM value:', status, error);
+            }
+        });
+    }
+
+
+    // --- Event Listeners ---
+
+    // Update the UI in real-time as the slider is moved.
+    pwmSlider.on('input', function() {
+        const value = $(this).val();
+        pwmPercentageElement.text(value + '%');
+        pwmBarElement.css('width', value + '%');
     });
 
-    // --- Optional: Simulate Sensor Updates (for demonstration purposes) ---
-    // If you were connecting to an MCU, this part would be replaced by actual data fetching.
+    // Send the final value to the server only when the user releases the slider.
+    // This prevents sending too many requests while dragging.
+    pwmSlider.on('change', function() {
+        const value = parseInt($(this).val());
+        sendPwmValue(value);
+    });
 
-    const temperatureDisplay = document.getElementById('temperature');
-    const humidityDisplay = document.getElementById('humidity');
-    const airPressureDisplay = document.getElementById('air-pressure');
 
-    const simulateSensorData = () => {
-        // DHT11 Sensor Simulation
-        const temp = (Math.random() * (30 - 20) + 20).toFixed(1); // 20.0 to 30.0 °C
-        const humidity = (Math.random() * (70 - 50) + 50).toFixed(1); // 50.0 to 70.0 %
+    // --- Initialization ---
 
-        // Ionic Thruster Air Pressure Simulation (km/h)
-        // Let's make it slightly responsive to PWM for fun
-        const currentPwm = parseInt(pwmSlider.value);
-        const basePressure = 500; // Base km/h at 0% PWM
-        const maxAdditionalPressure = 1500; // Max additional km/h at 100% PWM
-        const pressure = (basePressure + (maxAdditionalPressure * (currentPwm / 100))).toFixed(0);
+    // Fetch initial sensor data as soon as the page loads.
+    updateSensorReadings();
 
-        temperatureDisplay.textContent = `${temp} \u00B0C`; // \u00B0 is the degree symbol
-        humidityDisplay.textContent = `${humidity} %`;
-        airPressureDisplay.textContent = `${pressure} km/h`;
-    };
-
-    // Update sensor data every 2 seconds
-    setInterval(simulateSensorData, 2000);
-
-    // Call it once immediately so there's data on load
-    simulateSensorData();
+    // Set an interval to automatically update sensor data every 2 seconds (2000 ms).
+    setInterval(updateSensorReadings, 2000);
 
 });

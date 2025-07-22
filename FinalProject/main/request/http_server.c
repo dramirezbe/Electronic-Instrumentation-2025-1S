@@ -29,11 +29,6 @@ static TaskHandle_t task_http_server_monitor = NULL;
 // Queue handle used to manipulate the main queue of events
 static QueueHandle_t http_server_monitor_queue_handle;
 
-static uint8_t s_led_state = 0;
-
-
-
-
 // Embedded files: JQuery, index.html, app.css, app.js and favicon.ico files
 extern const uint8_t jquery_3_3_1_min_js_start[]	asm("_binary_jquery_3_3_1_min_js_start");
 extern const uint8_t jquery_3_3_1_min_js_end[]		asm("_binary_jquery_3_3_1_min_js_end");
@@ -45,7 +40,6 @@ extern const uint8_t app_js_start[]					asm("_binary_app_js_start");
 extern const uint8_t app_js_end[]					asm("_binary_app_js_end");
 extern const uint8_t favicon_ico_start[]			asm("_binary_favicon_ico_start");
 extern const uint8_t favicon_ico_end[]				asm("_binary_favicon_ico_end");
-
 
 //-----------------------------------UTILS----------------------------
 /**
@@ -253,11 +247,13 @@ static esp_err_t http_server_get_lm35_sensor_readings_json_handler(httpd_req_t *
 
 	cJSON *root;
     char *json_string = NULL;
-	float lm35_temp = 0;
+	float lm35_temp = 0.0f;
 
     root = cJSON_CreateObject();
 
 	xQueuePeek(http_send_lm35_queue, &lm35_temp, (TickType_t)pdMS_TO_TICKS(100));
+
+	printf("http in, lm35 temp: %.2f\r\n", lm35_temp);
 
     if (cJSON_AddNumberToObject(root, "temp", lm35_temp) == NULL) {
         cJSON_Delete(root);
@@ -265,6 +261,8 @@ static esp_err_t http_server_get_lm35_sensor_readings_json_handler(httpd_req_t *
     }
 
     json_string = cJSON_Print(root);
+
+	printf("Requested JSON: %s\n", json_string);
 
     httpd_resp_set_type(req, "application/json");
     httpd_resp_send(req, json_string, strlen(json_string));
@@ -282,7 +280,7 @@ static esp_err_t http_server_get_anemo_readings_json_handler(httpd_req_t *req)
 
 	cJSON *root;
     char *json_string = NULL;
-	float anemo_diff = 0;
+	float anemo_diff = 0.0f;
 
     root = cJSON_CreateObject();
 
@@ -294,6 +292,8 @@ static esp_err_t http_server_get_anemo_readings_json_handler(httpd_req_t *req)
     }
 
     json_string = cJSON_Print(root);
+
+	printf("Requested JSON: %s\n", json_string);
 
     httpd_resp_set_type(req, "application/json");
     httpd_resp_send(req, json_string, strlen(json_string));
@@ -328,7 +328,7 @@ static esp_err_t http_server_pwm_value_handler(httpd_req_t *req)
     httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send(req, NULL, 0);
 
-	xQueueSend(http_receive_pwm_queue, &pwm_val, (TickType_t)pdMS_TO_TICKS(100));
+	xQueueSend(http_receive_pwm_queue, &pwm_val, (TickType_t)pdMS_TO_TICKS(10));
 
     return ESP_OK;
 }

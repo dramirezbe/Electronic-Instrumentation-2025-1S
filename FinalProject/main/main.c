@@ -232,47 +232,43 @@ void uart_rx_task(void *arg) {
 
 void adc_task(void *arg) {
     adc_type_data_t adc_item;
-    adc_item.type = NTC_DATA_TYPE;
-    adc_item.value = 0;
-    float current_ntc = 0;
-    float current_lm35 = 0;
-    float new_ntc = 0;
-    float new_lm35 = 0;
+    // These now hold the last known state for each sensor.
+    // Initialize to a default/non-zero value if you want, or handle the initial zero case.
+    float current_ntc = 0.0f;
+    float current_lm35 = 0.0f;
+    float diff = 0.0f;
 
     TickType_t last_display_time = xTaskGetTickCount();
-
-    float diff = 0;
 
     char wind[20];
     char ambient[20];
 
     while(1) {
-        
+        // Wait for any new data from either sensor
         if (xQueueReceive(adc_data_queue, &adc_item, portMAX_DELAY)) {
             
-            if(adc_item.type) {
-                //printf("LM35: %.2f °C\r\n", adc_item.value);
-                new_lm35 = adc_item.value;
+            // --- FIX: Logic is now separated ---
 
+            if(adc_item.type) { // Assuming LM35_DATA_TYPE is 1 or a defined constant
+                // 1. Update ONLY the lm35 value
+                current_lm35 = adc_item.value;
                 
+                xQueueOverwrite(http_send_lm35_queue, &current_lm35);
 
             } else {
-                //printf("NTC: %.2f °C\r\n", adc_item.value);
-                new_ntc = adc_item.value;
                 
+                current_ntc = adc_item.value;
             }
-            current_lm35 = new_lm35;
-            current_ntc = new_ntc;
-
+            
+            // --- Recalculate and send the difference AFTER any update ---
             diff = fabs(current_ntc - current_lm35);
-
-            xQueueOverwrite(http_send_lm35_queue, &current_lm35);
             xQueueOverwrite(http_send_anemo_queue, &diff);
 
+
+            // The display logic can remain the same, as it will just show the latest stored state
             sprintf(wind, "%.2f Km/h", diff);
-            sprintf(ambient, "%.2f °C", current_lm35);
+            sprintf(ambient, "%.2f C", current_lm35); // Removed degree symbol for simplicity in sprintf
             
-            // Update display only if 1 second has passed
             if (xTaskGetTickCount() - last_display_time >= pdMS_TO_TICKS(1000)) {
                 ssd1306_clear();
                 ssd1306_print_str(18,0,"Wind Speed:", false);
@@ -280,18 +276,10 @@ void adc_task(void *arg) {
                 ssd1306_print_str(18,30,"Ambient Temp:", false);
                 ssd1306_print_str(28,45,ambient, false);
                 ssd1306_display();
-
-                
-
                 last_display_time = xTaskGetTickCount();
             }
-
         }
-        
-         
     }
-
-
 }
 
 void pwm_task(void *arg) {
@@ -301,8 +289,9 @@ void pwm_task(void *arg) {
 
     while(1) {
         if(xQueueReceive(http_receive_pwm_queue, &new_pwm, portMAX_DELAY)) {
+            printf("PWM http received: %d\r\n", new_pwm);
             current_pwm = new_pwm;
-            pwm_set_duty_percent(&thruster_pwm, current_pwm);
+            pwm_set_duty(&thruster_pwm, &timer, current_pwm);
         }
         
     }
@@ -311,6 +300,7 @@ void pwm_task(void *arg) {
 
 void app_main(void)
 {
+    init_ssd1306();
     //MUTEX
     xMutex = xSemaphoreCreateMutex();
     printf("Mutex created successfully.\r\n");
@@ -325,26 +315,26 @@ void app_main(void)
     //ADC
     adc_data_queue = xQueueCreate(10, sizeof(adc_type_data_t));
     http_receive_pwm_queue = xQueueCreate(10, sizeof(int));
-    http_send_lm35_queue = xQueueCreate(10, sizeof(float));
-    http_send_anemo_queue = xQueueCreate(10, sizeof(float));
+    http_send_lm35_queue = xQueueCreate(1, sizeof(float));
+    http_send_anemo_queue = xQueueCreate(1, sizeof(float));
 
     //Initialize NVS
-	// esp_err_t ret = nvs_flash_init();
-	// if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
-	// {
-	// 	ESP_ERROR_CHECK(nvs_flash_erase());
-	// 	ret = nvs_flash_init();
-	// }
-	// ESP_ERROR_CHECK(ret);
+	esp_err_t ret = nvs_flash_init();
+	if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
+	{
+		ESP_ERROR_CHECK(nvs_flash_erase());
+		ret = nvs_flash_init();
+	}
+	ESP_ERROR_CHECK(ret);
 	
 	// Start Wifi
-	//wifi_app_start();
+	wifi_app_start();
 
-    init_ssd1306();
+    
 	
     xTaskCreate(uart_rx_task, "uart_rx_task", 2048, NULL, 5, NULL);
     xTaskCreate(ntc_task, "ntc_task", 4096, NULL, 4, NULL);
     xTaskCreate(lm35_task, "lm35_task", 4096, NULL, 4, NULL);
     xTaskCreate(adc_task, "adc_task", 4096, NULL, 4, NULL);
-
+    xTaskCreate(pwm_task, "pwm_task", 4096, NULL, 4, NULL);
 }

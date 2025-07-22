@@ -14,12 +14,13 @@
         </header>
 
         <main class="main-content">
+            <!-- Sensor sections remain the same -->
             <section class="sensor-data panel">
                 <h2>Environmental Readings</h2>
                 <div class="data-grid">
                     <div class="data-item">
                         <span class="label">Temperature:</span>
-                        <span class="value" id="temperature">25.3 &deg;C</span>
+                        <span class="value" id="temperature-value">-- °C</span>
                     </div>
                 </div>
             </section>
@@ -28,8 +29,8 @@
                 <h2>Ionic Thruster Metrics</h2>
                 <div class="data-grid">
                     <div class="data-item">
-                        <span class="label">Air Pressure:</span>
-                        <span class="value" id="air-pressure">4 km/h</span>
+                        <span class="label">Air Speed:</span>
+                        <span class="value" id="air-speed-value">-- km/h</span>
                     </div>
                 </div>
             </section>
@@ -39,11 +40,16 @@
                 <div class="control-area">
                     <div class="pwm-display">
                         <span class="label">PWM Duty Cycle:</span>
-                        <span class="value" id="pwm-percentage">50%</span>
+                        <span class="value" id="pwm-percentage-value">50%</span>
                     </div>
                     <div class="pwm-bar-container">
-                        <input type="range" min="0" max="100" value="50" class="pwm-slider" id="pwmSlider">
-                        <div class="pwm-bar" id="pwmBar" style="width: 50%;"></div>
+                        <!--
+                           FIX: Added the aria-label attribute to describe the slider's purpose
+                           for accessibility tools. This resolves the console error.
+                        -->
+                        <input type="range" min="0" max="100" value="50" class="pwm-slider" id="pwm-slider" aria-label="Thruster Power PWM Control">
+
+                        <div class="pwm-bar" id="pwm-bar" style="width: 50%;"></div>
                     </div>
                     <p class="note">Adjust the slider to control thruster power.</p>
                 </div>
@@ -51,11 +57,14 @@
         </main>
 
         <footer class="footer">
-            <p>&copy; 2025 Electronic Instrumentation</p>
+            <p>© 2025 Electronic Instrumentation</p>
             <p>David Ramírez Betancourth & Santiago Bustamante Montoya</p>
         </footer>
     </div>
 
-    <script src="app.js"></script>
+    <!-- Include jQuery first -->
+    <script src="/jquery-3.3.1.min.js"></script>
+    <!-- Then your custom app script -->
+    <script src="/app.js"></script>
 </body>
 </html>
